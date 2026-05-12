@@ -1,6 +1,6 @@
 import Foundation
 
-struct DNSRecord: Decodable, Encodable, Identifiable {
+struct DNSRecord: Decodable, Identifiable {
     let id: String?
     let type: String
     let name: String
@@ -33,7 +33,7 @@ struct DNSRecord: Decodable, Encodable, Identifiable {
         if let directContent = try container.decodeIfPresent(String.self, forKey: .content), !directContent.isEmpty {
             content = directContent
         } else if let dataObject = try? container.decodeIfPresent([String: String].self, forKey: .data),
-                  let rendered = dataObject?.map({ "\($0.key)=\($0.value)" }).sorted().joined(separator: ", "),
+                  let rendered = dataObject.map({ "\($0.key)=\($0.value)" }).sorted().joined(separator: ", "),
                   !rendered.isEmpty {
             content = rendered
         } else {
