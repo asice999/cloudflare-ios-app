@@ -1,0 +1,51 @@
+name: iOS Unsigned Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build app
+        run: |
+          xcodebuild \
+            -project CloudflareDNS.xcodeproj \
+            -scheme CloudflareDNS \
+            -sdk iphoneos \
+            -configuration Release \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Locate .app bundle
+        run: |
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -path "*Release-iphoneos/CloudflareDNS.app" | head -n 1)
+          echo "APP_PATH=$APP_PATH" >> $GITHUB_ENV
+          test -d "$APP_PATH"
+
+      - name: Package unsigned ipa
+        run: |
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -qry unsigned-CloudflareDNS.ipa Payload
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: CloudflareDNS-unsigned-build
+          path: |
+            unsigned-CloudflareDNS.ipa

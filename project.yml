@@ -1,0 +1,34 @@
+name: CloudflareDNS
+options:
+  bundleIdPrefix: com.asice
+  deploymentTarget:
+    iOS: "17.0"
+settings:
+  base:
+    PRODUCT_BUNDLE_IDENTIFIER: com.asice.cloudflaredns
+    SWIFT_VERSION: 5.9
+    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: 0.1.0
+    GENERATE_INFOPLIST_FILE: YES
+    INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+    INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+    INFOPLIST_KEY_CFBundleDisplayName: CloudflareDNS
+    INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
+    DEVELOPMENT_TEAM: ""
+packages: {}
+targets:
+  CloudflareDNS:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: Sources
+    settings:
+      base:
+        PRODUCT_NAME: CloudflareDNS
+        PRODUCT_BUNDLE_IDENTIFIER: com.asice.cloudflaredns
+        TARGETED_DEVICE_FAMILY: 1,2
+        SUPPORTS_MACCATALYST: NO
+        CODE_SIGN_STYLE: Automatic
+    scheme:
+      testTargets: []
