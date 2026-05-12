@@ -53,23 +53,56 @@ final class CloudflareAPIClient {
 
     func fetchDNSRecords(zoneID: String) async throws -> PartialDecodeResult<DNSRecord> {
         let request = try makeRequest(path: "zones/\(zoneID)/dns_records")
-        let (data, _) = try await URLSession.shared.data(for: request)
-        let decoded = try decoder.decode(RawCloudflareListResponse.self, from: data)
-        guard decoded.success else {
-            throw AppError.server(decoded.errors.first?.message ?? "获取 DNS 记录失败")
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            throw AppError.server("获取 DNS 记录失败：HTTP 状态异常")
+        }
+
+        guard
+            let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let success = root["success"] as? Bool
+        else {
+            throw AppError.server("获取 DNS 记录失败：返回格式异常")
+        }
+
+        if !success {
+            if let errors = root["errors"] as? [[String: Any]],
+               let message = errors.first?["message"] as? String {
+                throw AppError.server(message)
+            }
+            throw AppError.server("获取 DNS 记录失败")
+        }
+
+        guard let result = root["result"] as? [[String: Any]] else {
+            throw AppError.server("获取 DNS 记录失败：result 缺失")
         }
 
         var items: [DNSRecord] = []
         var skippedCount = 0
 
-        for raw in decoded.result {
-            do {
-                let itemData = try JSONEncoder().encode(raw)
-                let record = try decoder.decode(DNSRecord.self, from: itemData)
-                items.append(record)
-            } catch {
-                skippedCount += 1
+        for record in result {
+            let id = record["id"] as? String
+            let type = (record["type"] as? String) ?? "UNKNOWN"
+            let name = (record["name"] as? String) ?? "(未命名记录)"
+            let ttl = (record["ttl"] as? Int) ?? 1
+            let proxied = record["proxied"] as? Bool
+
+            var content = (record["content"] as? String) ?? ""
+
+            if content.isEmpty, let dataObject = record["data"] as? [String: Any] {
+                content = dataObject
+                    .map { "\($0.key)=\(String(describing: $0.value))" }
+                    .sorted()
+                    .joined(separator: ", ")
             }
+
+            if content.isEmpty, type == "UNKNOWN" && name == "(未命名记录)" {
+                skippedCount += 1
+                continue
+            }
+
+            items.append(DNSRecord(id: id, type: type, name: name, content: content, ttl: ttl, proxied: proxied))
         }
 
         return PartialDecodeResult(items: items, skippedCount: skippedCount)

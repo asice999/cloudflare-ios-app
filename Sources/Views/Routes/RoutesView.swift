@@ -11,26 +11,31 @@ struct RoutesView: View {
         ScrollView {
             VStack(spacing: 14) {
                 ForEach(items) { item in
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            Text(item.title)
-                                .font(.headline)
-                            Spacer()
-                            Text(item.kind)
-                                .font(.caption)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.blue.opacity(0.12))
-                                .clipShape(Capsule())
+                    NavigationLink(destination: RouteDetailView(item: item)) {
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                Text(item.title)
+                                    .font(.headline)
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                                Text(item.kind)
+                                    .font(.caption)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.blue.opacity(0.12))
+                                    .clipShape(Capsule())
+                            }
+                            Text(item.description)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
                         }
-                        Text(item.description)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(18)
+                        .background(Color(.systemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 18))
+                        .contentShape(RoundedRectangle(cornerRadius: 18))
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(18)
-                    .background(Color(.systemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
+                    .buttonStyle(.plain)
                 }
             }
             .padding(20)
@@ -45,4 +50,24 @@ private struct RouteItem: Identifiable {
     let title: String
     let description: String
     let kind: String
+}
+
+private struct RouteDetailView: View {
+    let item: RouteItem
+
+    var body: some View {
+        Form {
+            Section("路由类型") {
+                LabeledContent("名称", value: item.title)
+                LabeledContent("类型", value: item.kind)
+                Text(item.description)
+                    .foregroundStyle(.secondary)
+            }
+            Section("下一步") {
+                Text("这个模块已接入导航，后续会继续对接 Workers Routes / Tunnel Routes 等接口。")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .navigationTitle(item.title)
+    }
 }

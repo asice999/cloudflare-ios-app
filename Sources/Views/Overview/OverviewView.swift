@@ -41,11 +41,20 @@ struct OverviewView: View {
             Text("快捷入口")
                 .font(.headline)
             VStack(spacing: 12) {
-                QuickEntryRow(title: "管理 DNS 记录", subtitle: "查看和修改域名解析", icon: "network")
-                QuickEntryRow(title: "查看数据分析", subtitle: "流量、带宽与请求趋势", icon: "chart.line.uptrend.xyaxis")
-                QuickEntryRow(title: "管理连接器", subtitle: "Zero Trust / Tunnel 接入概览", icon: "link.badge.plus")
-                QuickEntryRow(title: "检查路由", subtitle: "Workers / Tunnel / 网络转发", icon: "arrow.triangle.branch")
+                NavigationLink(destination: ZoneListView()) {
+                    QuickEntryRow(title: "管理 DNS 记录", subtitle: "查看和修改域名解析", icon: "network")
+                }
+                NavigationLink(destination: AnalyticsView()) {
+                    QuickEntryRow(title: "查看数据分析", subtitle: "流量、带宽与请求趋势", icon: "chart.line.uptrend.xyaxis")
+                }
+                NavigationLink(destination: ConnectorsView()) {
+                    QuickEntryRow(title: "管理连接器", subtitle: "Zero Trust / Tunnel 接入概览", icon: "link.badge.plus")
+                }
+                NavigationLink(destination: RoutesView()) {
+                    QuickEntryRow(title: "检查路由", subtitle: "Workers / Tunnel / 网络转发", icon: "arrow.triangle.branch")
+                }
             }
+            .buttonStyle(.plain)
         }
     }
 
@@ -110,6 +119,7 @@ private struct QuickEntryRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
                 Text(subtitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -121,6 +131,7 @@ private struct QuickEntryRow: View {
         .padding(16)
         .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 18))
+        .contentShape(RoundedRectangle(cornerRadius: 18))
     }
 }
 
