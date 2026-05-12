@@ -5,13 +5,6 @@ final class CloudflareAPIClient {
     private let keychain = KeychainService()
     private let decoder = JSONDecoder()
 
-    private struct RawCloudflareListResponse: Decodable {
-        let success: Bool
-        let errors: [CloudflareAPIError]
-        let messages: [CloudflareMessage]
-        let result: [JSONValue]
-    }
-
     private struct RawCloudflareObjectResponse: Decodable {
         let success: Bool
         let errors: [CloudflareAPIError]
@@ -106,6 +99,62 @@ final class CloudflareAPIClient {
         }
 
         return PartialDecodeResult(items: items, skippedCount: skippedCount)
+    }
+
+    func fetchDashboardOverview() async throws -> DashboardOverview {
+        let zones = try await fetchZones()
+        var totalDNSRecords = 0
+        var proxiedCount = 0
+        var dnsOnlyCount = 0
+
+        for zone in zones.prefix(10) {
+            let result = try await fetchDNSRecords(zoneID: zone.id)
+            totalDNSRecords += result.items.count
+            proxiedCount += result.items.filter { $0.proxied == true }.count
+            dnsOnlyCount += result.items.filter { $0.proxied == false }.count
+        }
+
+        let activeZoneCount = zones.filter { ($0.status ?? "").lowercased() == "active" }.count
+
+        return DashboardOverview(
+            zoneCount: zones.count,
+            totalDNSRecords: totalDNSRecords,
+            proxiedCount: proxiedCount,
+            dnsOnlyCount: dnsOnlyCount,
+            topZoneName: zones.first?.name,
+            activeZoneCount: activeZoneCount
+        )
+    }
+
+    func fetchDNSAnalytics() async throws -> DNSAnalytics {
+        let zones = try await fetchZones()
+        var allRecords: [DNSRecord] = []
+
+        for zone in zones.prefix(10) {
+            let result = try await fetchDNSRecords(zoneID: zone.id)
+            allRecords.append(contentsOf: result.items)
+        }
+
+        let typeMap = Dictionary(grouping: allRecords, by: { $0.type.uppercased() })
+            .map { DNSAnalyticsItem(name: $0.key, value: $0.value.count) }
+            .sorted { $0.value > $1.value }
+
+        let ttlMap = Dictionary(grouping: allRecords, by: { String($0.ttl) })
+            .map { DNSAnalyticsItem(name: "TTL \($0.key)", value: $0.value.count) }
+            .sorted { $0.value > $1.value }
+
+        let proxiedCount = allRecords.filter { $0.proxied == true }.count
+        let dnsOnlyCount = allRecords.filter { $0.proxied == false }.count
+        let unsupportedProxyCount = allRecords.filter { $0.proxied == nil }.count
+
+        return DNSAnalytics(
+            totalRecords: allRecords.count,
+            typeCounts: typeMap,
+            proxiedCount: proxiedCount,
+            dnsOnlyCount: dnsOnlyCount,
+            unsupportedProxyCount: unsupportedProxyCount,
+            ttlSummary: ttlMap
+        )
     }
 
     func createDNSRecord(zoneID: String, payload: DNSRecordRequest) async throws {

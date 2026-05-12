@@ -32,13 +32,6 @@ struct MainTabView: View {
             }
 
             NavigationStack {
-                RoutesView()
-            }
-            .tabItem {
-                Label("路由", systemImage: "point.3.connected.trianglepath.dotted")
-            }
-
-            NavigationStack {
                 SettingsView()
             }
             .tabItem {
