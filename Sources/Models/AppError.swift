@@ -19,3 +19,8 @@ enum AppError: LocalizedError {
         }
     }
 }
+
+struct PartialDecodeResult<T> {
+    let items: [T]
+    let skippedCount: Int
+}

@@ -5,6 +5,7 @@ final class DNSRecordListViewModel: ObservableObject {
     @Published var records: [DNSRecord] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published var warningMessage: String?
 
     private let api = CloudflareAPIClient()
 
@@ -12,10 +13,13 @@ final class DNSRecordListViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
         do {
-            records = try await api.fetchDNSRecords(zoneID: zoneID)
+            let result = try await api.fetchDNSRecords(zoneID: zoneID)
+            records = result.items
             errorMessage = nil
+            warningMessage = result.skippedCount > 0 ? "有 \(result.skippedCount) 条特殊记录未完整展示" : nil
         } catch {
             errorMessage = error.localizedDescription
+            warningMessage = nil
         }
     }
 
