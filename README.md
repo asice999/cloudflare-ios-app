@@ -35,5 +35,11 @@
 - 自动生成 Xcode 工程
 - 构建未签名 iOS `.app`
 - 打包为 `unsigned-CloudflareDNS.ipa`
+- 自动上传到 **Artifacts**
+- 自动发布到 **GitHub Releases**
+
+## 下载方式
+优先从 **Releases** 页面下载，后续优化版产物也会继续走 Release 发布：
+- `unsigned-CloudflareDNS.ipa`
 
 > 注意：这是未签名 IPA，仅用于你后续自签处理，不可直接安装。
