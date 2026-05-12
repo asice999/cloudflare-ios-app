@@ -32,9 +32,11 @@ struct DNSRecord: Decodable, Identifiable {
 
         if let directContent = try container.decodeIfPresent(String.self, forKey: .content), !directContent.isEmpty {
             content = directContent
-        } else if let dataObject = try? container.decodeIfPresent([String: String].self, forKey: .data),
-                  let rendered = dataObject.map({ "\($0.key)=\($0.value)" }).sorted().joined(separator: ", "),
-                  !rendered.isEmpty {
+        } else if let dataObject = try? container.decode([String: String].self, forKey: .data) {
+            let rendered = dataObject
+                .map { "\($0.key)=\($0.value)" }
+                .sorted()
+                .joined(separator: ", ")
             content = rendered
         } else {
             content = ""
